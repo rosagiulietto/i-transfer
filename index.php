@@ -44,6 +44,13 @@ function encode_filename($filename) {
     return str_replace(["\r", "\n"], '', $filename);
 }
 
+// Helper to format a timestamp as '09 nov 2026'
+function formatDate($timestamp) {
+    $months = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+    $m = (int) date('n', $timestamp);
+    return date('d', $timestamp) . ' ' . $months[$m - 1] . ' ' . date('Y', $timestamp) . ' • ' . date('H:i', $timestamp);
+}
+
 // Scan directory for files (excluding '.' '..', 'index.php', and hidden files)
 $scan = scandir($dir);
 $files = [];
@@ -54,14 +61,15 @@ foreach ($scan as $file) {
             $files[] = [
                 'name' => $file,
                 'size' => formatBytes(filesize($filepath)),
-                'date' => date("Y-m-d H:i", filemtime($filepath))
+                'mtime' => filemtime($filepath),
+                'date' => formatDate(filemtime($filepath))
             ];
         }
     }
 }
 // Sort files by modification date (newest first)
 usort($files, function($a, $b) {
-    return strcmp($b['date'], $a['date']);
+    return $b['mtime'] <=> $a['mtime'];
 });
 ?>
 <!DOCTYPE html>
@@ -76,7 +84,7 @@ usort($files, function($a, $b) {
     <div class="max-w-3xl w-full mx-auto p-6 sm:p-12">
         <header class="mb-8">
             <h1 class="text-2xl font-bold tracking-tight text-white">Shared Files</h1>
-            <p class="text-sm text-gray-400 mt-1">Select a file below to download it directly.</p>
+            <p class="text-sm text-gray-400 mt-1">Click on Download button to download your file.</p>
         </header>
 
         <?php if (isset($error)): ?>
@@ -110,7 +118,7 @@ usort($files, function($a, $b) {
         <?php endif; ?>
     </div>
     <footer class="text-center py-6 text-xs text-gray-600">
-        Lightweight File Sharing App
+        Lightweight File Sharing App - Powered by Giulietto 😎
     </footer>
 </body>
 </html>
